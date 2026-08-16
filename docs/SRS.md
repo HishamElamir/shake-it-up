@@ -187,7 +187,7 @@ Priorities use MoSCoW: **M**ust / **S**hould / **C**ould. Everything marked **M*
 | FR-33 | A visible **"Draw" button** performs an identical draw without any shake. It is always present, never hidden behind a menu. | M |
 | FR-34 | If the device has no accelerometer, or sensor access fails, the app shows tap-only mode with a one-time explanation instead of an error. | M |
 | FR-35 | Drawing from an empty deck (0 enabled items) is blocked with a clear message and a shortcut to add images. A deck with exactly 1 enabled item always returns that item. | M |
-| FR-36 | Selection must be statistically uniform: over 10 000 draws on a 10-item deck, each item's frequency stays within ±3 % of expectation (verified by automated test). | M |
+| FR-36 | Selection must be statistically uniform: over 100 000 draws on a 10-item deck, each item's frequency stays within ±3 % of expectation (verified by automated test with a seeded RNG). *Revised during implementation: at 10 000 draws the ±3 % band is one standard deviation wide, so roughly a third of items would fall outside it by chance and the check would measure noise rather than fairness.* | M |
 | FR-37 | Per-item weights (make some options more likely). | C |
 
 ### 3.5 Result presentation

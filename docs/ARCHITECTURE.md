@@ -545,3 +545,35 @@ immediate repeat as a bug. Pure random remains available for anyone who wants tr
 M3 is the milestone worth over-investing in; everything before it is scaffolding for it, and
 everything after it is presentation. If the schedule compresses, cut from M4's backlog
 (share, history view, duplicate detection) — never from M3's test traces.
+
+---
+
+## 14. What the first build actually does
+
+The core loop shipped first: add pictures, shake, get one back. It follows this document's layering
+and both of its pure-Dart components exactly. Four deliberate simplifications stand between it and
+the design above — each is a narrowing, not a different direction.
+
+| Area | Built | Design | Why the gap is safe to close later |
+|---|---|---|---|
+| **Decks** | One implicit library | Many named decks | Nothing in the domain assumes a single set; `PictureRepository` gains a deck id and the engine is untouched |
+| **Persistence** | JSON index beside the image files | Drift over SQLite | Drift needs `build_runner` in the loop, which is not worth it for one flat list. The repository interface is what the app talks to, so the swap is one class |
+| **Selection memory** | In-memory: last winner and bag state reset when the app restarts | Persisted per deck (FR-32) | `SelectionMemory` is already a separate object behind a provider; persisting it is a write in one place |
+| **Thumbnails** | Decoded from the original at display width via `cacheWidth` | Separate 512 px thumbnail files | Fine at MVP deck sizes; becomes a real cost past a few hundred pictures |
+
+Also not yet built, and specified above: history (FR-45–48), item labels and disable (FR-17, FR-18),
+undo on delete (FR-16), sharing (FR-43), onboarding (FR-49), and localisation (NFR-29, NFR-30).
+Sensitivity presets ship; the calibration screen (FR-26) does not.
+
+**One spec defect was found and fixed by the tests**, not by review: FR-36 originally asked for
+±3 % uniformity over 10 000 draws. At that sample size the ±3 % band is one standard deviation
+wide, so about a third of items would land outside it by chance — the test would have measured
+noise. The requirement now reads 100 000 draws with a seeded RNG, which is both meaningful and
+reproducible.
+
+**One design bug was found the same way.** `SelectionEngine.draw` took
+`BagState<T> bag = const BagState.empty()`. In a generic method, that default infers
+`BagState<Never>`, which type-errors at runtime the moment a real candidate list reaches
+`matches()` — the app would have crashed on the first draw after switching into shuffle-bag mode.
+The parameter is nullable now. Worth noting because static analysis was clean either way; only
+running the code caught it.
